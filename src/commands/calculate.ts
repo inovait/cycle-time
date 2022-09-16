@@ -67,7 +67,7 @@ const calculate = async (email: string, token: string, domain: string, project: 
         const changelog = issue.changelog.histories;
         const { issueStartDate, issueEndDate } = getIssueStartAndEndTransitionDates(changelog, projectStatuses['In Progress'], projectStatuses.Done);
         const whoWorkedOnThisIssue = getUsersThatWorkedOnIssue(changelog, assignee, issueStartDate, issueEndDate);
-        const allStatusesCycleTime = calculateCycleTimeForEachStatus(Object.keys(projectStatusesArray), changelog);
+        const allStatusesCycleTime = calculateCycleTimeForEachStatus(projectStatusesArray, changelog);
         let time;
 
         try {
