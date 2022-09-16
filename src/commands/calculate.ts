@@ -16,9 +16,10 @@
  */
 
 import fs from 'fs';
-import { calculateBusinessMinutesForDates, getIssueStartAndEndTransitionDates, getUserThatWorkedOnIssue, filterOutOutliersUsingIQR, extractMainPropertiesFromIssue, dateUtils } from '../utils';
+import { calculateBusinessMinutesForDates, getIssueStartAndEndTransitionDates, getUsersThatWorkedOnIssue, filterOutOutliersUsingIQR, extractMainPropertiesFromIssue, dateUtils } from '../utils';
 import { fetchTicketsForProject, fetchStatusesForProject } from '../API';
 import { JiraIssueBean, JiraSearchResults, IssueTypeWithStatus, MainStatusCategoryTypes } from '../types';
+import calculateCycleTimeForEachStatus from '../utils/calculateCycleTimeForEachStatus';
 
 const getStatuses = async (email: string, token: string, domain: string, project: string) => {
     const statuses: IssueTypeWithStatus[] = await fetchStatusesForProject(email, token, domain, project);
@@ -30,8 +31,8 @@ const getStatuses = async (email: string, token: string, domain: string, project
     };
 
     statuses.forEach(({ statuses }) => {
-        statuses.forEach(({ statusCategory, id }) => {
-            mainStatusCategories[statusCategory.name] = Array.from(new Set([...mainStatusCategories[statusCategory.name], id]));
+        statuses.forEach(({ statusCategory, name }) => {
+            mainStatusCategories[statusCategory.name] = Array.from(new Set([...mainStatusCategories[statusCategory.name], name]));
         });
     });
 
@@ -40,6 +41,7 @@ const getStatuses = async (email: string, token: string, domain: string, project
 
 const calculate = async (email: string, token: string, domain: string, project: string) => {
     const projectStatuses = await getStatuses(email, token, domain, project);
+    const projectStatusesArray = Object.values(projectStatuses).reduce((pV, cV) => [...pV, ...cV], []);
 
     const JQL = `project="${encodeURIComponent(project)}" and status!="Backlog" and issueType!="Epic" and created>="${dateUtils.getLastThreeQuartersStartDate()}"`;
 
@@ -64,7 +66,8 @@ const calculate = async (email: string, token: string, domain: string, project: 
         const { fields: { assignee } } = issue;
         const changelog = issue.changelog.histories;
         const { issueStartDate, issueEndDate } = getIssueStartAndEndTransitionDates(changelog, projectStatuses['In Progress'], projectStatuses.Done);
-        const whoWorkedOnThisIssue = getUserThatWorkedOnIssue(changelog, assignee, issueEndDate);
+        const whoWorkedOnThisIssue = getUsersThatWorkedOnIssue(changelog, assignee, issueStartDate, issueEndDate);
+        const allStatusesCycleTime = calculateCycleTimeForEachStatus(Object.keys(projectStatusesArray), changelog);
         let time;
 
         try {
@@ -78,8 +81,8 @@ const calculate = async (email: string, token: string, domain: string, project: 
             issueStartDate,
             issueEndDate,
             time,
-            whoWorkedOnThisName: whoWorkedOnThisIssue?.displayName,
-            whoWorkedOnThisAccountId: whoWorkedOnThisIssue?.accountId,
+            whoWorkedOnThisName: `"${whoWorkedOnThisIssue ?? ""}"`,
+            ...allStatusesCycleTime,
         };
     });
 

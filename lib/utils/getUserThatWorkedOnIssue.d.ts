@@ -1,6 +1,3 @@
 import { JiraChangelog } from "../types";
-declare const getUserThatWorkedOnIssue: (changelog: JiraChangelog[], assignee: any, issueEndDate: string) => {
-    accountId: any;
-    displayName: any;
-} | null;
+declare const getUserThatWorkedOnIssue: (changelog: JiraChangelog[], assignee: any, issueStartDate: string, issueEndDate: string) => string | null;
 export default getUserThatWorkedOnIssue;

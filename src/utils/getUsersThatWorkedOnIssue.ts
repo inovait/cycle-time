@@ -1,4 +1,3 @@
-"use strict";
 /*
  * Copyright 2022, Inova IT d.o.o.
  *
@@ -15,38 +14,55 @@
  * limitations under the License.
  *
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-const filterStatusAndAssigneeChangesFromChangelog = (changelog) => changelog.filter(({ items }) => items.filter(({ field }) => field === 'assignee').length !== 0);
-const getCurrentAssignedUser = (assignee) => {
+
+import { JiraChangelog } from "../types";
+
+const filterStatusAndAssigneeChangesFromChangelog = (changelog: JiraChangelog[]) =>
+    changelog.filter(({ items }) => items.filter(({ field }) => field === 'assignee').length !== 0);
+
+const getCurrentAssignedUser = (assignee: any) => {
     if (assignee) {
-        return assignee.displayName;
+        return assignee.displayName as string;
     }
+
     return null;
 };
-const getUserThatWorkedOnIssue = (changelog, assignee, issueStartDate, issueEndDate) => {
+
+const getUsersThatWorkedOnIssue = (changelog: JiraChangelog[], assignee: any, issueStartDate: string, issueEndDate: string) => {
     const assigneeChangelogs = filterStatusAndAssigneeChangesFromChangelog(changelog);
+
     if (!assigneeChangelogs.length) {
         return getCurrentAssignedUser(assignee);
     }
+
     if (!issueStartDate || !issueEndDate) {
         return getCurrentAssignedUser(assignee);
     }
+
     const startDate = new Date(issueStartDate).getTime();
     const endDate = new Date(issueEndDate).getTime();
+
     const allUsersAssignedBetweenImplementationOfIssue = assigneeChangelogs.filter(({ created }) => {
         const current = new Date(created).getTime();
+
         return current >= startDate && current <= endDate;
     });
+
     if (allUsersAssignedBetweenImplementationOfIssue.length) {
         const assignee = allUsersAssignedBetweenImplementationOfIssue
             .reverse()
-            .map(({ items }) => items.filter(({ field }) => field === 'assignee').map(({ toString, fromString }) => [fromString, toString]).reduce((pV, cV) => [...pV, ...cV], []))
+            .map(({ items }) =>
+                items.filter(({ field }) => field === 'assignee')
+                    .map(({ toString, fromString }) => [fromString, toString])
+                    .reduce((pV, cV) => [...pV, ...cV], []))
             .reduce((pV, cV) => [...pV, ...cV], [])
             .filter((v) => v !== null);
-        const uniqueAssignees = Array.from(new Set(assignee))
+
+        return Array.from(new Set(assignee))
             .join(',');
-        return uniqueAssignees;
     }
+
     return getCurrentAssignedUser(assignee);
 };
-exports.default = getUserThatWorkedOnIssue;
+
+export default getUsersThatWorkedOnIssue;
