@@ -20,19 +20,29 @@ import { JiraChangelog } from "../types";
 const getIssueStartAndEndTransitionDates = (changelog: JiraChangelog[], statusesInProgress: string[], statusesInDone: string[]) => {
     // all changelogs are sorted descending by date created.
 
-    const issueStartDate = changelog
-        .filter(({ items }) => items.filter(({ toString, field, fromString }) => field === 'status' && statusesInProgress.includes(toString) && toString !== fromString).length !== 0)
-        .map(({ created }) => ({ created }))
-        .pop();
+    const transitionsToStartArray = changelog
+        .filter(({ items }) => items.filter(({ toString, field, fromString }) => field === 'status' && statusesInProgress.includes(toString!) && toString !== fromString).length !== 0)
+        .map(({ created }) => (created));
 
-    const issueEndDate = changelog
-        .filter(({ items }) => items.filter(({ toString, field, fromString }) => field === 'status' && statusesInDone.includes(toString) && toString !== fromString).length !== 0)
-        .map(({ created }) => ({ created }))
-        .pop();
+    const issueStartDate = transitionsToStartArray[transitionsToStartArray.length - 1];
+
+    const transitionsToEndArray = changelog
+        .filter(({ items }) => items.filter(({ toString, field, fromString }) => field === 'status' && statusesInDone.includes(toString!) && toString !== fromString).length !== 0)
+        .map(({ created }) => (created));
+
+    let issueEndDate: string | undefined = transitionsToEndArray[transitionsToEndArray.length - 1];
+
+    if (transitionsToStartArray[0]) {
+        const transitionsToEndIfTicketReopened = transitionsToEndArray.filter((timestamp) => new Date(timestamp).getTime() > new Date(transitionsToStartArray[0]).getTime());
+
+        if (transitionsToEndIfTicketReopened.length) {
+            issueEndDate = transitionsToEndIfTicketReopened.pop();
+        }
+    }
 
     return {
-        issueStartDate: issueStartDate?.created ? new Date(issueStartDate.created).toISOString() : '',
-        issueEndDate: issueEndDate?.created ? new Date(issueEndDate.created).toISOString() : '',
+        issueStartDate: issueStartDate ? new Date(issueStartDate).toISOString() : '',
+        issueEndDate: issueEndDate ? new Date(issueEndDate).toISOString() : '',
     };
 };
 

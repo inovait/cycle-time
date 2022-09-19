@@ -30,14 +30,14 @@ const calculateCycleTimeForEachStatus = (statuses: string[], changelog: JiraChan
             ...items.filter(({ field }) => field === 'status')[0],
         }))
         .forEach(({ toString, fromString, timestampOfChange }) => {
-            if (!allStatusesStart[toString]) {
-                allStatusesStart[toString] = [];
+            if (!allStatusesStart[toString!]) {
+                allStatusesStart[toString!] = [];
             }
-            if (!allStatusesEnd[fromString]) {
-                allStatusesEnd[fromString] = [];
+            if (!allStatusesEnd[fromString!]) {
+                allStatusesEnd[fromString!] = [];
             }
-            allStatusesStart[toString].push(timestampOfChange);
-            allStatusesEnd[fromString].push(timestampOfChange);
+            allStatusesStart[toString!].push(timestampOfChange);
+            allStatusesEnd[fromString!].push(timestampOfChange);
         });
 
     const startEndOfAllStatuses = statuses.map((v) => {

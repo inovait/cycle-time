@@ -19,7 +19,7 @@ type JiraObject = {
     [key: string]: any;
 }
 
-type JiraUserDetails = {
+export type JiraUserDetails = {
     self: string;
     accountId: string;
     emailAddress: string | null;
@@ -34,10 +34,10 @@ export type JiraChangeDetails = {
     field: string;
     fieldtype: string;
     fieldId: string;
-    from: string;
-    fromString: string;
-    to: string;
-    toString: string;
+    from: string | null;
+    fromString: string | null;
+    to: string | null;
+    toString: string | null;
 }
 
 export type JiraChangelog = {
