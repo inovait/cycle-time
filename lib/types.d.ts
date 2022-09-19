@@ -1,7 +1,7 @@
 declare type JiraObject = {
     [key: string]: any;
 };
-declare type JiraUserDetails = {
+export declare type JiraUserDetails = {
     self: string;
     accountId: string;
     emailAddress: string | null;
@@ -15,10 +15,10 @@ export declare type JiraChangeDetails = {
     field: string;
     fieldtype: string;
     fieldId: string;
-    from: string;
-    fromString: string;
-    to: string;
-    toString: string;
+    from: string | null;
+    fromString: string | null;
+    to: string | null;
+    toString: string | null;
 };
 export declare type JiraChangelog = {
     id: string;
